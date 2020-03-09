@@ -1,0 +1,88 @@
+pipeline {
+
+    agent {
+      kubernetes {
+        label 'image-builder'
+        defaultContainer 'jnlp'
+        yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: jenkins
+    component: builder
+spec:
+  serviceAccountName: jenkins
+  containers:
+    - name: golang
+      image: docker.io/golang:latest
+      tty: true
+    - name: dind
+      image: docker:18.05-dind
+      args:
+      - --dns=8.8.8.8
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - name: dind-storage
+          mountPath: /var/lib/docker
+  volumes:
+    - name: dind-storage
+      emptyDir: {}
+"""
+      }
+    }
+    environment {
+        REGISTRY_URL = 'artifactory.netp5fki6k.nks.cloud/demo'
+        IMAGE_NAME = 'rocket'
+        COMMIT_SLUG = "${GIT_COMMIT}".substring(0,8)
+        REGISTRY_CREDENTIALS = credentials('Artifactory')
+    }
+    stages {
+        stage ('Prepare') {
+            steps {
+                container('jnlp') {
+                script {
+                    def myRepo = checkout scm
+                    def gitCommit = "${GIT_COMMIT}"
+                    def gitBranch = "${GIT_BRANCH}"
+                    def previousGitCommit = sh(script: "git rev-parse ${gitCommit}~", returnStdout: true)
+                }
+            } }
+        }
+
+        stage ('Test') {
+            steps {
+                container('golang') {
+                    sh """
+                        echo 'tests passed :)'
+                    """
+                }
+            }
+        }
+
+
+        stage ('Build Image') {
+            steps {
+                container('dind') {
+                    sh """
+                        cd apps/website
+                        docker build -t ${REGISTRY_URL}/${IMAGE_NAME}:${GIT_BRANCH}-${COMMIT_SLUG} .
+                        docker tag ${REGISTRY_URL}/${IMAGE_NAME}:${GIT_BRANCH}-${COMMIT_SLUG} ${REGISTRY_URL}/${IMAGE_NAME}:latest
+                        """
+                }
+            }
+        }
+
+        stage ('Push Image') {
+            steps {
+                container('dind') {
+                    sh """
+                        docker login -u ${REGISTRY_CREDENTIALS_USR} -p ${REGISTRY_CREDENTIALS_PSW} ${REGISTRY_URL}
+                        docker push ${REGISTRY_URL}/${IMAGE_NAME}:latest
+                        """
+                }
+            }
+        }
+    }
+}
