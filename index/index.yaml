@@ -3,12 +3,12 @@ entries:
   hello-rocket:
   - apiVersion: v1
     appVersion: "1.0"
-    created: "2020-03-10T15:36:40.650447-06:00"
-    description: A Helm chart for Kubernetes
-    digest: 06fbb39ba52b771c0701cb27e5593b0e634066bfbc2f774dc7ce1f9b73172fd1
+    created: "2020-03-10T15:49:07.600126-06:00"
+    description: A small bear
+    digest: f2f272234ecfeef24c28a186bdbf9eaea35af46cf1c7ec1bd758f4291e4f1eb7
     icon: https://github.com/sgryczan/nks-demo/blob/master/charts/website/static/icon.png?raw=true
     name: hello-rocket
     urls:
-    - hello-rocket-0.1.0.tgz
-    version: 0.1.0
-generated: "2020-03-10T15:36:40.648416-06:00"
+    - hello-rocket-0.0.1.tgz
+    version: 0.0.1
+generated: "2020-03-10T15:49:07.597526-06:00"
