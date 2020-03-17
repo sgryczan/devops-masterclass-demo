@@ -1,0 +1,83 @@
+nameOverride: artifactory
+fullnameOverride: artifactory
+serviceAccount:
+  create: true
+
+ingress:
+  enabled: true
+  defaultBackend:
+    enabled: true
+  # Used to create an Ingress record.
+  hosts:
+    - <INGRESS HOSTNAME>
+  path: /
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    ingress.kubernetes.io/proxy-read-timeout: "600"
+    ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      rewrite ^/(v2)/token /artifactory/api/docker/null/v2/token;
+      rewrite ^/v2/([^\/]*)/manifests/(.*) /artifactory/api/docker/$1/v2/docker/manifests/$2;
+      rewrite ^/v2/([^\/]*)/blobs/(.*) /artifactory/api/docker/$1/v2/docker/blobs/$2;
+  tls:
+    - secretName: <CERTIFICATE>
+
+ 
+# Artifactory
+artifactory:
+  name: artifactory
+ 
+  ## Artifactory license.
+  license:
+    ## licenseKey is the license key in plain text. Use either this or the license.secret setting
+    licenseKey: |-
+      <-------------------------------------------------------------------------->
+      <-------------------------------------------------------------------------->
+      <-------------------------------------------------------------------------->
+      <-------------------------------------------------------------------------->
+      <-------------------------------------------------------------------------->
+      <-------------------------------------------------------------------------->
+      <---------------------ENTER LICENSE KEY HERE ------------------------------>
+      <-------------------------------------------------------------------------->
+      <-------------------------------------------------------------------------->
+      <-------------------------------------------------------------------------->
+      <-------------------------------------------------------------------------->
+
+
+  persistence:
+    mountPath: "/var/opt/jfrog/artifactory"
+    enabled: true
+    
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    storageClass: <STORAGE CLASS>
+
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1"
+    limits:
+      memory: "3Gi"
+      cpu: "2"
+  
+  javaOpts:
+    xms: "2g"
+    xmx: "2g"
+
+    
+
+# Nginx
+nginx:
+  enabled: false
+
+
+## Configuration values for the PostgreSQL dependency sub-chart
+## ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
+postgresql:
+  enabled: true
+  persistence:
+    enabled: true
+    size: 50Gi
+    storageClass: <STORAGE CLASS>
+
